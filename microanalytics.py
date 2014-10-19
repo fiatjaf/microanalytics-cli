@@ -3,14 +3,24 @@
 
 import click
 import requests
-from .charts import bar
+try:
+    from .charts import bar
+except:
+    from charts import bar
 from prettytable import PrettyTable
+import os
+
+db = open(os.path.join(os.path.expanduser("~"), '.config', 'microanalytics', 'db')).read().strip()
+try:
+    ddoc = open(os.path.join(os.path.expanduser("~"), '.config', 'microanalytics', 'ddoc')).read().strip()
+except:
+    ddoc = 'microanalytics'
 
 @click.command()
 @click.argument('token')
 def stats(token):
     res = requests.get(
-        'http://spooner.alhur.es:5984/microanalytics/_all_docs',
+        db + '/_all_docs',
         headers={'Accept': 'application/json'},
         params={
             'include_docs': 'true',
@@ -20,24 +30,24 @@ def stats(token):
             'limit': '100',
         }
     )
-    table = PrettyTable(['Event', 'Value', 'Date', 'Page', 'Session', 'Referrer'])
+    table = PrettyTable(['Event', 'Date', 'Page', 'Session', 'Referrer'])
     table.align['Event'] = 'l'
     table.align['Page'] = 'l'
     table.align['Referrer'] = 'l'
     for row in reversed(res.json()['rows']):
         doc = row['doc']
+        date = row['id'].split('-', 1)[1]
         table.add_row([
-            doc['event'][:12],
-            doc['value'][:7] if type(doc['value']) is str else doc['value'],
-            doc['date'].split('T')[0],
-            doc['page'][-40:],
+            doc['event'][:11],
+            ' '.join(date.split('T')),
+            doc['page'][-30:] if doc['page'] else '',
             doc['session'][:5],
             doc.get('referrer', '')[:20]
         ])
     click.echo(table)
 
     res = requests.get(
-        'http://spooner.alhur.es:5984/microanalytics/_design/webapp/_list/unique-sessions/page-views',
+        db + '/_design/' + ddoc + '/_list/unique-sessions/page-views',
         headers={'Accept': 'application/json'},
         params={
             'startkey': '["%s"]' % token,
