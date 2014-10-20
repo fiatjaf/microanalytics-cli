@@ -14,9 +14,27 @@ from prettytable import PrettyTable
 today = datetime.date.today()
 config_path = os.path.join(os.path.expanduser("~"), '.config', 'microanalytics')
 
-db = open(config_path + '/db').read().strip()
-ddoc = open(config_path + '/ddoc').read().strip()
-token = None
+# create config folder
+if not os.path.exists(config_path):
+    os.makedirs(config_path)
+
+# get opts from config folder (or set them)
+try:
+    db = open(config_path + '/db').read().strip()
+except:
+    db = click.prompt("You haven't set the URL of your CouchDB Microanalytics \
+                       database, enter it now")
+    if db:
+        open(config_path + '/db', 'w').write(db)
+
+try:
+    ddoc = open(config_path + '/ddoc').read().strip()
+except:
+    ddoc = click.prompt("Enter the name of the Design Document, if it is not 'microanalytics'",
+                        default='microanalytics')
+    if ddoc:
+        open(config_path + '/ddoc', 'w').write(ddoc)
+##
 
 @click.group()
 @click.argument('code')
