@@ -3,22 +3,30 @@
 
 import click
 import requests
+import datetime
+import os
 try:
     from .charts import bar
 except:
     from charts import bar
 from prettytable import PrettyTable
-import os
 
-db = open(os.path.join(os.path.expanduser("~"), '.config', 'microanalytics', 'db')).read().strip()
-try:
-    ddoc = open(os.path.join(os.path.expanduser("~"), '.config', 'microanalytics', 'ddoc')).read().strip()
-except:
-    ddoc = 'microanalytics'
+today = datetime.date.today()
+config_path = os.path.join(os.path.expanduser("~"), '.config', 'microanalytics')
 
-@click.command()
-@click.argument('token')
-def stats(token):
+db = open(config_path + '/db').read().strip()
+ddoc = open(config_path + '/ddoc').read().strip()
+token = None
+
+@click.group()
+@click.argument('code')
+def main(code):
+    global token
+    token = code
+
+@main.command('events')
+@click.option('--limit', '-n', default=70, help='Limit the number of events to this.')
+def basic(limit):
     res = requests.get(
         db + '/_all_docs',
         headers={'Accept': 'application/json'},
@@ -27,7 +35,7 @@ def stats(token):
             'descending': 'true',
             'endkey': '"%s-"' % token,
             'startkey': '"%s-\uffff"' % token,
-            'limit': '100',
+            'limit': limit,
         }
     )
     table = PrettyTable(['Event', 'Date', 'Page', 'Session', 'Referrer'])
@@ -44,14 +52,18 @@ def stats(token):
             doc['session'][:5],
             doc.get('referrer', '')[:20]
         ])
+    click.echo('\nLast Events:')
     click.echo(table)
 
+@main.command('sessions')
+@click.option('--limit', '-n', default=45, help='Limit the number of shown days to this.')
+def sessions(limit):
     res = requests.get(
         db + '/_design/' + ddoc + '/_list/unique-sessions/page-views',
         headers={'Accept': 'application/json'},
         params={
-            'startkey': '["%s"]' % token,
-            'endkey': '["%s", {}]' % token,
+            'startkey': '["%s", "%s"]' % (token, (today - datetime.timedelta(limit)).isoformat()),
+            'endkey': '["%s", "%s", {}]' % (token, today.isoformat()),
             'reduce': 'true',
             'group_level': 3
         }
@@ -59,9 +71,11 @@ def stats(token):
     data = []
     for row in res.json()['rows']:
         data.append([row['key'][1], row['value']])
+    click.echo('\nNumber of unique page views per day:')
     click.echo(bar(data))
 
+
 if __name__ == '__main__':
-    stats()
+    main()
 
 main = stats
