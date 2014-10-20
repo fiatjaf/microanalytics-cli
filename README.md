@@ -39,3 +39,5 @@ sudo pip install microanalytics
 | click    | 2014-10-19 02:33:26.702914 | alhur.es/asc/Carboidrato%20(g) |  080fa  |                      |
 +----------+----------------------------+--------------------------------+---------+----------------------+
 ```
+
+`microanalytics [tracking-code]` will have the same result as of calling `events` and `sessions` together.

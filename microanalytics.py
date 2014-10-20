@@ -36,15 +36,21 @@ except:
         open(config_path + '/ddoc', 'w').write(ddoc)
 ##
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.argument('code')
-def main(code):
+@click.pass_context
+def main(ctx, code):
     global token
     token = code
 
+    if not ctx.invoked_subcommand:
+        # called with just `microanalytics <token>`
+        ctx.invoke(events)
+        ctx.invoke(sessions)
+
 @main.command('events')
 @click.option('--limit', '-n', default=70, help='Limit the number of events to this.')
-def basic(limit):
+def events(limit):
     res = requests.get(
         db + '/_all_docs',
         headers={'Accept': 'application/json'},

@@ -24,7 +24,7 @@ setup(
         'requests>=2.4.1',
     ],
     url='https://github.com/fiatjaf/microanalytics',
-    version='0.1.2',
+    version='0.1.3',
     entry_points='''
 
     [console_scripts]
