@@ -107,26 +107,27 @@ def inspect():
     pass
 
 @inspect.command('sessions')
-def inspect_sessions():
+@click.option('--limit', '-n', default=10, help='Limit the number of shown days to this.')
+def inspect_sessions(limit):
     res = requests.get(
         db + '/_design/' + ddoc + '/_view/inspect-sessions',
         headers={'Accept': 'application/json'},
         params={
-            'descending': 'true',
-            'endkey': '["%s", "%s"]' % (token, (now - datetime.timedelta(5)).isoformat()),
-            'startkey': '["%s", "%s", {}]' % (token, now.isoformat()),
+            'startkey': '["%s", "%s"]' % (token, (now - datetime.timedelta(limit)).isoformat()),
+            'endkey': '["%s", "%s", {}]' % (token, now.isoformat()),
             'reduce': 'false'
         }
     )
     sessions = {}
-    summaries = {}
-    globalsummary = {}
+    sessionorder = []
     d = {}
 
     for row in res.json()['rows']:
 
-        sessiondata = sessions.get(row['key'][2], [])
-        summarydata = summaries.get(row['key'][2], {})
+        sessiondata = sessions.get(row['key'][2])
+        if not sessiondata:
+            sessiondata = []
+            sessionorder.append(row['key'][2])
 
         # d holds the event_abbreviations of the names of the events
         event_name = row['key'][3]
@@ -141,65 +142,35 @@ def inspect_sessions():
             event_abbr = d[event_name]
         # ~
 
-        summarydata[event_abbr] = summarydata.get(event_abbr, 0)
-        summarydata[event_abbr] += 1
-
-        globalsummary[event_abbr] = globalsummary.get(event_abbr, 0)
-        globalsummary[event_abbr] += 1
-
         ev = {
-            'itv': '',
             'name': event_abbr,
-            'value': row['value']
+            'value': row['value'],
+            'time': row['key'][1]
         }
 
-        if len(sessiondata):
-            last = sessiondata.pop()
-            itv = dateutil.parser.parse(last) - dateutil.parser.parse(row['key'][1])
-            s = int(itv.seconds)
-            m = int(itv.seconds/60)
-            h = int(m/60)
-            if s == 0:
-                ev['itv'] = ':: less than a second after'
-            else:
-                ev['itv'] = ':: after '
-                ev['itv'] += '%s seconds' % s if s < 60 else '%s minutes' % m if m < 60 else "%s hours" % h
-
         sessiondata.append(ev)
-        sessiondata.append(row['key'][1])
 
         sessions[row['key'][2]] = sessiondata
-        summaries[row['key'][2]] = summarydata
 
     for n, abbr in d.items():
-        click.echo('%s: %s' % (n, abbr))
-
-    for session, data in sessions.items():
-        click.echo()
-
-        for ev in data:
-            if type(ev) is not dict: continue
-
-            itv = ev.get('itv', '')
-            click.echo('%s: %s -> %s %s' % (session[:5], ev['name'], ev['value'], itv))
-
-        # print session summary
-        click.echo('-----------')
-        summary = summaries[session]
-        click.echo(
-            ', '.join(tuple('%s: %s' % (name, count) for name, count in summary.items())) + \
-            '    | ' + \
-            session[:5] + \
-            ' totals'
-        )
-        # ~
+        click.echo(u'%s: %s' % (n, abbr))
 
     click.echo()
-    click.echo('===========')
-    click.echo(
-        ', '.join(tuple('%s: %s' % (name, count) for name, count in globalsummary.items())) + \
-        '    | totals'
-    )
+    for session in sessionorder:
+        data = sessions[session]
+
+        allevents = []
+        for ev in data:
+            allevents.append(u'{}->{}'.format(ev['name'], ev['value']))
+
+        start = dateutil.parser.parse(data[0]['time']).strftime('%b-%d %H:%M')
+        end = dateutil.parser.parse(data[-1]['time']).strftime('%b-%d %H:%M')
+
+        click.echo(
+            u'{} ({}): '.format(session[:5], start) + \
+            u'|'.join(allevents) + \
+            u' ({})'.format(end)
+        )
 
 if __name__ == '__main__':
     main()
