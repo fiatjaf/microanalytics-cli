@@ -43,3 +43,17 @@ sudo pip install microanalytics
 ```
 
 `microanalytics [tracking-code]` will have the same result as of calling `events` and `sessions` together.
+
+```
+Top referrals:
+     pt.scribd.com  ▇  1
+  www.facebook.com  ▇  1
+    m.facebook.com  ▇▇▇▇  3
+ www.google.com.br  ▇▇▇▇▇▇▇▇  6
+   lm.facebook.com  ▇▇▇▇▇▇▇▇▇▇▇▇▇  10
+    www.reddit.com  ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇  16
+```
+
+`microanalytics [tracking-code] referrals` will show a chart with all the website domains that referred a visitor to your tracked website:
+
+
