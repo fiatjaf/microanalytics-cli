@@ -102,6 +102,25 @@ def sessions(limit):
     click.echo('\nNumber of unique page views per day:')
     click.echo(bar(data))
 
+@main.command('pageviews')
+@click.option('--limit', '-n', default=45, help='Limit the number of shown days to this.')
+def pageviews(limit):
+    res = requests.get(
+        db + '/_design/' + ddoc + '/_view/page-views',
+        headers={'Accept': 'application/json'},
+        params={
+            'startkey': '["%s", "%s"]' % (token, (today - datetime.timedelta(limit)).isoformat()),
+            'endkey': '["%s", "%s", {}]' % (token, today.isoformat()),
+            'reduce': 'true',
+            'group_level': 2
+        }
+    )
+    data = []
+    for row in res.json()['rows']:
+        data.append([row['key'][1], row['value']])
+    click.echo('\nNumber of page views per day:')
+    click.echo(bar(data))
+
 @main.group('inspect')
 def inspect():
     pass

@@ -22,6 +22,8 @@ sudo pip install microanalytics
 2014-10-19  ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇  29
 ```
 
+`microanalytics [tracking-code] pageviews` will do the same as `... sessions`, but for the total number of page views (the `pageView` event).
+
 `microanalytics [tracking-code] events` lists the last 70 events dispatched at the target site:
 ```
 +----------+----------------------------+--------------------------------+---------+----------------------+
