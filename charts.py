@@ -1,8 +1,18 @@
 # -*- encoding: utf-8 -*-
 
-def bar(data):
-    tick = u'▇'
+tick = u'▇'
+
+# get terminal width
+import os
+try:
+    _, width = os.popen('stty size', 'r').read().split()
+    width = int(width) - 5
+except:
     width = 50
+
+def bar(data):
+    global width
+    global tick
 
     labels = []
     values = []
