@@ -155,6 +155,43 @@ def referrals(path, querystring, hash):
     click.echo('\nTop referrals:')
     click.echo(bar(data))
 
+@main.command('pages')
+@click.option('--domain', is_flag=True, help='Break values by domain only instead of by path.')
+@click.option('--querystring',  is_flag=True, help='Break values by path and querystring instead of only by path.')
+@click.option('--hash',  is_flag=True, help='Break values by path , querystring and hash instead of only by path.')
+def visited_pages(domain, querystring, hash):
+    group_level = 3
+    if domain: group_level = 2
+    if querystring: group_level = 4
+    if hash: group_level = 5
+
+    res = requests.get(
+        db + '/_design/' + ddoc + '/_view/visited-pages',
+        headers={'Accept': 'application/json'},
+        params={
+            'startkey': '["%s"]' % (token,),
+            'endkey': '["%s", {}]' % (token,),
+            'reduce': 'true',
+            'group_level': group_level
+        }
+    )
+    data = []
+    for row in res.json()['rows']:
+        label = row['key'][1]
+        n = len(filter(bool, row['key']))
+        if n > 2: label = row['key'][2]
+        if n > 3: label += '?' + row['key'][3]
+        if n > 4: label += row['key'][4]
+
+        if not domain:
+            label = '/' + '/'.join(label.split('/')[1:])
+
+        data.append([label, row['value']])
+    data.sort(key=lambda x:x[1]) # sort by value
+
+    click.echo('\nMost visited pages:')
+    click.echo(bar(data))
+
 @main.group('inspect')
 def inspect():
     pass
