@@ -98,7 +98,13 @@ def sessions(limit):
     )
     data = []
     for row in res.json()['rows']:
-        data.append([row['key'][1], row['value']])
+        day = datetime.datetime.strptime(row['key'][1], '%Y-%m-%d')
+        if len(data): # fill the missing days
+            last_day = datetime.datetime.strptime(data[-1][0], '%Y-%m-%d')
+            while day > last_day + datetime.timedelta(1):
+                last_day = last_day + datetime.timedelta(1)
+                data.append([datetime.datetime.strftime(last_day, '%Y-%m-%d'), 0])
+        data.append([datetime.datetime.strftime(day, '%Y-%m-%d'), row['value']])
     click.echo('\nNumber of unique page views per day:')
     click.echo(bar(data))
 
@@ -117,7 +123,13 @@ def pageviews(limit):
     )
     data = []
     for row in res.json()['rows']:
-        data.append([row['key'][1], row['value']])
+        day = datetime.datetime.strptime(row['key'][1], '%Y-%m-%d')
+        if len(data): # fill the missing days
+            last_day = datetime.datetime.strptime(data[-1][0], '%Y-%m-%d')
+            while day > last_day + datetime.timedelta(1):
+                last_day = last_day + datetime.timedelta(1)
+                data.append([datetime.datetime.strftime(last_day, '%Y-%m-%d'), 0])
+        data.append([datetime.datetime.strftime(day, '%Y-%m-%d'), row['value']])
     click.echo('\nNumber of page views per day:')
     click.echo(bar(data))
 
