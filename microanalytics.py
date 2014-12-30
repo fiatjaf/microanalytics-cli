@@ -76,7 +76,7 @@ def events(limit):
         table.add_row([
             doc['event'][:11],
             ' '.join(date.split('T')),
-            doc['page'][-30:] if doc['page'] else '',
+            doc['page'][-30:] if 'page' in doc else '',
             doc['session'][:5],
             doc.get('referrer', '')[:20]
         ])
