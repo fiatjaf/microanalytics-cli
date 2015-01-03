@@ -54,7 +54,13 @@ def main(ctx, code):
 
 @main.command('events')
 @click.option('--limit', '-n', default=70, help='Limit the number of events to this.')
-def events(limit):
+@click.argument('fields', nargs=-1)
+def events(limit, fields):
+    'Lists selected fields of last events (event, date, time, value, ip, session, page, referrer)'
+
+    if not fields:
+        fields = ('event', 'date', 'session', 'referrer')
+
     res = requests.get(
         db + '/_all_docs',
         headers={'Accept': 'application/json'},
@@ -66,20 +72,16 @@ def events(limit):
             'limit': limit,
         }
     )
-    table = PrettyTable(['Event', 'Date', 'Page', 'Session', 'Referrer'])
-    table.align['Event'] = 'l'
-    table.align['Page'] = 'l'
-    table.align['Referrer'] = 'l'
+    table = PrettyTable(fields)
+    for field in fields:
+        table.align[field] = 'l'
     for row in reversed(res.json()['rows']):
         doc = row['doc']
-        date = row['id'].split('-', 1)[1]
-        table.add_row([
-            doc['event'][:11],
-            ' '.join(date.split('T')),
-            doc['page'][-30:] if 'page' in doc else '',
-            doc['session'][:5],
-            doc.get('referrer', '')[:20]
-        ])
+        datetime = row['id'].split('-', 1)[1]
+        doc['date'], doc['time'] = datetime.split('T')
+        doc['session'] = doc['session'][-5:]
+        values = tuple(doc.get(field, '') for field in fields)
+        table.add_row(values)
     click.echo('\nLast Events:')
     click.echo(table)
 
