@@ -24,20 +24,12 @@ if not os.path.exists(config_path):
 
 # get opts from config folder (or set them)
 try:
-    db = open(config_path + '/db').read().strip()
+    endpoint = open(config_path + '/endpoint').read().strip()
 except:
-    db = click.prompt("You haven't set the URL of your CouchDB Microanalytics \
-                       database, enter it now")
-    if db:
-        open(config_path + '/db', 'w').write(db)
-
-try:
-    ddoc = open(config_path + '/ddoc').read().strip()
-except:
-    ddoc = click.prompt("Enter the name of the Design Document, if it is not 'microanalytics'",
-                        default='microanalytics')
-    if ddoc:
-        open(config_path + '/ddoc', 'w').write(ddoc)
+    endpoint = click.prompt("You haven't set the URL of your Microanalytics instance."
+                            "\nenter it now")
+    if endpoint:
+        open(config_path + '/endpoint', 'w').write(endpoint)
 ##
 
 @click.group(invoke_without_command=True)
@@ -62,7 +54,7 @@ def events(limit, fields):
         fields = ('event', 'date', 'session', 'referrer')
 
     res = requests.get(
-        db + '/_all_docs',
+        endpoint + '/_all_docs',
         headers={'Accept': 'application/json'},
         params={
             'include_docs': 'true',
@@ -89,7 +81,7 @@ def events(limit, fields):
 @click.option('--limit', '-n', default=45, help='Limit the number of shown days to this.')
 def sessions(limit):
     res = requests.get(
-        db + '/_design/' + ddoc + '/_list/unique-sessions/page-views',
+        endpoint + '/_ddoc/_list/unique-sessions/page-views',
         headers={'Accept': 'application/json'},
         params={
             'startkey': '["%s", "%s"]' % (token, (today - datetime.timedelta(limit)).isoformat()),
@@ -114,7 +106,7 @@ def sessions(limit):
 @click.option('--limit', '-n', default=45, help='Limit the number of shown days to this.')
 def pageviews(limit):
     res = requests.get(
-        db + '/_design/' + ddoc + '/_view/page-views',
+        endpoint + '/_ddoc/_view/page-views',
         headers={'Accept': 'application/json'},
         params={
             'startkey': '["%s", "%s"]' % (token, (today - datetime.timedelta(limit)).isoformat()),
@@ -146,7 +138,7 @@ def referrals(path, querystring, hash):
     if hash: group_level = 5
 
     res = requests.get(
-        db + '/_design/' + ddoc + '/_view/referrals',
+        endpoint + '/_ddoc/_view/referrals',
         headers={'Accept': 'application/json'},
         params={
             'startkey': '["%s"]' % (token,),
@@ -180,7 +172,7 @@ def visited_pages(domain, querystring, hash):
     if hash: group_level = 5
 
     res = requests.get(
-        db + '/_design/' + ddoc + '/_view/visited-pages',
+        endpoint + '/_ddoc/_view/visited-pages',
         headers={'Accept': 'application/json'},
         params={
             'startkey': '["%s"]' % (token,),
@@ -214,7 +206,7 @@ def inspect():
 @click.option('--limit', '-n', default=10, help='Limit the number of shown days to this.')
 def inspect_sessions(limit):
     res = requests.get(
-        db + '/_design/' + ddoc + '/_view/inspect-sessions',
+        endpoint + '/_ddoc/_view/inspect-sessions',
         headers={'Accept': 'application/json'},
         params={
             'startkey': '["%s", "%s"]' % (token, (now - datetime.timedelta(limit)).isoformat()),
