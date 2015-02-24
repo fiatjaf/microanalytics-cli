@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(
-    author='Giovanni Torres Parra',
+    author='fiatjaf',
     author_email='fiatjaf@gmail.com',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -14,7 +14,7 @@ setup(
     description='Client to a Micronalytics server',
     license='MIT',
     include_package_data=True,
-    maintainer='Giovanni Torres Parra',
+    maintainer='fiatjaf',
     maintainer_email='fiatjaf@gmail.com',
     name='microanalytics',
     py_modules=['microanalytics', 'charts'],

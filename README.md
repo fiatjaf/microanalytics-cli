@@ -1,8 +1,8 @@
 ## Install:
 
-```bash
-sudo pip install microanalytics
-```
+If you use Python you will know what means `sudo pip install microanalytics`.
+
+If you don't use Python, grab our most recent binary in our [releases](https://github.com/fiatjaf/microanalytics-cli/releases) page.
 
 ## Usage:
 

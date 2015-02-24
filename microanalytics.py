@@ -3,6 +3,11 @@
 
 from __future__ import division
 
+# pyinstaller workarounds
+import sys
+sys.getfilesystemencoding = lambda: 'UTF-8'
+##
+
 import click
 import requests
 import datetime
